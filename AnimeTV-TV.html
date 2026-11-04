@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AnimeTV cho TV</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.7/hls.min.js"></script>
+<style>
+:root{--bg:#0b0b0f;--r:#ee2b2b;--m:#9a9aa5}
+html{font-size:clamp(10px,1.25vw,28px)}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:#fff;font:1rem/1.4 system-ui,Roboto,sans-serif;overflow:hidden}
+a{color:inherit;text-decoration:none}
+.f{outline:0;transition:transform .15s,box-shadow .15s;cursor:pointer}
+.f:focus{box-shadow:0 0 0 .22rem #fff;transform:scale(1.06);position:relative;z-index:5}
+#sd{position:fixed;left:0;top:0;bottom:0;width:5.5rem;z-index:50;background:#1b1b26;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1.8rem}
+#sd .f{display:grid;place-items:center;width:4rem;height:4rem;border-radius:1rem;font-size:0;color:#c8c8d0;border:0;background:none}
+#sd .f span{display:none}#sd .f i{display:grid;font-style:normal}#sd svg{width:2.1rem;height:2.1rem}#sd .lg{display:none}
+#sd .f:focus{color:var(--r);box-shadow:none;transform:scale(1.2)}#sd .on{color:var(--r)}
+main{margin-left:5.5rem;height:100vh;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;position:relative;z-index:1}
+main::-webkit-scrollbar{display:none}
+.bgf{position:fixed;left:5.5rem;top:0;right:0;bottom:0;z-index:-1;background:#111 center/cover;transition:background-image .3s}
+.bgf:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0b0b0fee 8%,#0b0b0f66 52%,#0b0b0f00),linear-gradient(#0000 38%,#0b0b0fe6 92%)}
+.hi{padding:12vh 3rem 1.2rem;max-width:58rem;min-height:56vh}
+.hi h1{font-size:4.2rem;line-height:1.05;font-weight:900;text-shadow:0 .15rem .6rem #000}.hi .m1{color:#ddd;margin-top:1.6rem;font-size:1.2rem;letter-spacing:.03em}.hi .m2{color:#ddd;margin:.3rem 0 .5rem;font-size:1.2rem;min-height:1.7rem}.hi .dd{font-size:1.25rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;max-width:50rem}
+.b{display:inline-block;background:#2a2a30;padding:.9rem 1.9rem;border-radius:3rem;font-size:1.3rem;border:0;color:#fff;margin:0 .8rem .6rem 0}.b.r{background:var(--r)}.b.on{background:#fff;color:#000}
+.sec{margin:.4rem 0}.sec h3{font-size:1.5rem;padding:.3rem 3rem;font-weight:600}
+.row{display:flex;gap:1.3rem;padding:.8rem 3rem 1.4rem;overflow-x:hidden}
+.card{flex:0 0 10.8rem;border-radius:.9rem}.card:focus{box-shadow:0 0 0 .2rem #ff6b6b;transform:scale(1.03)}
+.card img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:.9rem;display:block;background:#222}
+.im{position:relative}.pt{position:absolute;left:8%;right:8%;bottom:.7rem;height:.4rem;border-radius:1rem;background:#fff5}.pt i{display:block;height:100%;background:#fff;border-radius:1rem}
+.cl{display:flex;justify-content:space-between;gap:.5rem;margin-top:.5rem;align-items:flex-start}.cl p{font-size:1.05rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.cl span{color:#bbb;font-size:.95rem;white-space:nowrap}
+.grid{display:flex;flex-wrap:wrap;gap:1.4rem;padding:1rem 3rem 3rem}
+.pg{padding:2.5rem 0 3rem}.h1{font-size:2.2rem;font-weight:800;padding:0 3rem 1rem}
+.kb{display:flex;flex-wrap:wrap;gap:.6rem;padding:1rem 3rem;max-width:62rem}.kb .f{background:#2a2a30;border:0;color:#fff;width:4rem;height:3.4rem;border-radius:.7rem;font-size:1.3rem}.kb .f.wd{width:8rem}
+input.f{margin:0 3rem;width:56rem;max-width:80%;padding:1rem 1.4rem;border-radius:1rem;border:0;background:#222;color:#fff;font-size:1.5rem}
+.dt{position:relative;min-height:100vh;background:#111 center/cover}.dt:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0b0b0f 25%,#0b0b0fcc 60%,#0b0b0f66),linear-gradient(#0000 50%,#0b0b0f)}
+.dt .in{position:relative;padding:4rem 3rem 2rem;max-width:60rem}.dt h1{font-size:2.8rem;line-height:1.1}.mt{color:var(--m);margin:.8rem 0;font-size:1.15rem}.ds{font-size:1.15rem;color:#ddd;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.eps{position:relative;padding:.5rem 3rem 3rem;display:flex;flex-wrap:wrap;gap:.7rem;max-width:80rem}.eps .b{margin:0;padding:.7rem 1.4rem;font-size:1.15rem;border-radius:.8rem}
+.pr{display:flex;align-items:center;gap:1.5rem;padding:0 3rem 1rem}.big{width:7rem;height:7rem;border-radius:50%;background:#333;display:grid;place-items:center;font-size:4rem}
+#pl{position:fixed;inset:0;z-index:100;background:#000}#pl[hidden]{display:none}#pl video,#pl iframe{width:100%;height:100%;border:0}
+#ov{position:absolute;left:0;right:0;bottom:0;padding:3rem 3rem 2rem;background:linear-gradient(#0000,#000d);opacity:0;transition:opacity .3s;font-size:1.4rem}#ov.on{opacity:1}
+.pb{height:.5rem;background:#fff4;border-radius:1rem;margin:.8rem 0}.pb i{display:block;height:100%;background:var(--r);border-radius:1rem;width:0}
+#ts{position:fixed;top:1.5rem;right:2rem;z-index:200;background:#000d;padding:.7rem 1.4rem;border-radius:2rem;font-size:1.2rem;display:none}
+.st{display:flex;justify-content:space-between;width:60rem;max-width:90%;margin:0 3rem .8rem;padding:1.2rem 1.6rem;background:#1b1b26;border-radius:1rem;font-size:1.4rem;border:0;color:#fff;text-align:left}.st span{color:#bbb}
+.ld{padding:6rem;text-align:center;color:var(--m);font-size:1.4rem}
+</style></head><body>
+<div id="sd"><div class="lg">Anime<b>TV</b></div>
+<a class="f" href="#home"><i><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 3 2 12h3v8h5v-6h4v6h5v-8h3z"/></svg></i>Trang chủ</a><a class="f" href="#search"><i><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 6 6"/></svg></i>Tìm kiếm</a><a class="f" href="#library"><i><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none"><rect x="3.5" y="9" width="17" height="11" rx="2.5"/><path d="M6.5 5.5h11M9 2.5h6"/></svg></i>Thư viện</a><a class="f" id="src" href="#settings"><i><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></i>Cài đặt<span id="sn"></span></a><a class="f" href="#me"><i><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></i>Cá nhân</a></div>
+<main id="app"></main><div id="pl" hidden></div><div id="ts"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const strip=s=>String(s||'').replace(/<[^>]*>/g,'');
+const j=u=>fetch(u).then(r=>{if(!r.ok)throw 0;return r.json()});
+const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
+const S={src:LS('atv_src')||'demo'};
+const img=u=>!u?'':/^(https?:|data:)/.test(u)?u:'https://phimimg.com/'+u.replace(/^\//,'');
+const norm=x=>({slug:x.slug,name:x.name,orig:x.origin_name||x.original_name||'',thumb:img(x.thumb_url),poster:img(x.poster_url||x.thumb_url),ep:x.episode_current||x.current_episode||'',q:x.quality||'',total:+x.total_episodes||0});
+/* ---------- API: KKPhim & NguonC ---------- */
+const API={
+ kk:{n:'KKPhim',
+  latest:p=>j(`https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=${p}`).then(d=>d.items),
+  list:(t,p,o={})=>j(`https://phimapi.com/v1/api/${o.cat?'the-loai/'+o.cat:'danh-sach/'+(t=='anime'?'hoat-hinh':t)}?page=${p}&limit=24${t=='anime'?'&country=nhat-ban':''}`).then(d=>d.data.items),
+  search:k=>j(`https://phimapi.com/v1/api/tim-kiem?keyword=${encodeURIComponent(k)}&limit=24`).then(d=>d.data.items),
+  detail:s=>j(`https://phimapi.com/phim/${s}`).then(d=>{const m=d.movie;return{name:m.name,orig:m.origin_name,content:strip(m.content),thumb:img(m.thumb_url),poster:img(m.poster_url),year:m.year,cats:(m.category||[]).map(c=>c.name),catSlug:(m.category||[])[0]?.slug,country:(m.country||[]).map(c=>c.name).join(', '),actors:(m.actor||[]).join(', '),director:(m.director||[]).join(', '),ep:m.episode_current,time:m.time,servers:(d.episodes||[]).map(s=>({name:s.server_name,eps:s.server_data.map(e=>({name:e.name,m3u8:e.link_m3u8,embed:e.link_embed}))}))}}),
+  cats:()=>j('https://phimapi.com/the-loai')},
+ ng:{n:'NguonC',
+  latest:p=>j(`https://phim.nguonc.com/api/films/phim-moi-cap-nhat?page=${p}`).then(d=>d.items),
+  list:(t,p,o={})=>j(`https://phim.nguonc.com/api/films/${o.cat?'the-loai/'+o.cat:'danh-sach/'+(t=='anime'?'hoat-hinh':t)}?page=${p}`).then(d=>d.items),
+  search:k=>j(`https://phim.nguonc.com/api/films/search?keyword=${encodeURIComponent(k)}`).then(d=>d.items),
+  detail:s=>j(`https://phim.nguonc.com/api/film/${s}`).then(d=>{const m=d.movie,cs=Object.values(m.category||{});const g=n=>cs.filter(c=>(c.group?.name||'').includes(n)).flatMap(c=>(c.list||[]).map(x=>x.name));return{name:m.name,orig:m.original_name,content:strip(m.description),thumb:img(m.thumb_url),poster:img(m.poster_url),year:g('Năm')[0],cats:g('Thể loại'),country:g('Quốc gia').join(', '),actors:m.casts||'',director:m.director||'',ep:m.current_episode,time:m.time,servers:(m.episodes||[]).map(s=>({name:s.server_name,eps:(s.items||[]).map(e=>({name:e.name,m3u8:e.m3u8,embed:e.embed}))}))}}),
+  cats:()=>Promise.reject()}
+};
+
+/* ---------- Demo (phim mẫu, chạy không cần API) ---------- */
+const DT=[['Vương Quốc Mây','hoat-hinh'],['Chú Gấu Và Rừng Xanh','hoat-hinh'],['Biệt Đội Nhí','hoat-hinh'],['Cá Voi Biết Hát','hoat-hinh'],['Mèo Con Phiêu Lưu','hoat-hinh'],['Robot Tí Hon','hoat-hinh'],['Công Chúa Hoa Anh Đào','hoat-hinh'],['Đội Trưởng Slime','hoat-hinh'],['Thợ Săn Rồng Nhí','hoat-hinh'],['Học Viện Phép Thuật Sao','hoat-hinh'],['Làng Nấm Kỳ Diệu','hoat-hinh'],['Chuyến Tàu Đêm Sao','hoat-hinh'],['Hải Tặc Bánh Quy','hoat-hinh'],['Bạn Rồng Bé Nhỏ','hoat-hinh'],['Đảo Kho Báu Vui Nhộn','hoat-hinh'],['Thám Tử Chuột Chũi','hoat-hinh'],['Vũ Điệu Của Gió','hoat-hinh'],['Nàng Tiên Cá Nhí','hoat-hinh'],['Siêu Nhân Xe Đạp','hoat-hinh'],['Giấc Mơ Của Cú Mèo','hoat-hinh'],['Mùa Hè Ở Trang Trại','hoat-hinh'],['Hành Tinh Kẹo Ngọt','hoat-hinh'],['Hiệp Sĩ Củ Cải','hoat-hinh'],['Ngôi Sao Nhỏ','hoat-hinh']];
+const pic=(t,w,h,i)=>{const ws=t.split(' '),ls=[];for(let k=0;k<ws.length;k+=2)ls.push(ws.slice(k,k+2).join(' '));const fs=Math.round(w/(w>h?16:9));
+ return 'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${i*47%360},70%,45%)"/><stop offset="1" stop-color="hsl(${(i*47+70)%360},70%,12%)"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="${w*.8}" cy="${h*.22}" r="${h*.18}" fill="#fff2"/>${ls.map((l,k)=>`<text x="50%" y="${h*.62+k*fs*1.2}" font-family="sans-serif" font-weight="800" font-size="${fs}" fill="#fff" text-anchor="middle">${l.replace(/&/g,'&amp;')}</text>`).join('')}</svg>`)};
+const DV=['https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8','https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4','https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'];
+const DM=DT.map(([n,t],i)=>({slug:'demo-'+i,name:n,origin_name:'Demo '+(i+1),thumb_url:pic(n,300,450,i),poster_url:pic(n,800,450,i),episode_current:i%4==0?'Full':'Tập '+(3+i%8),quality:i%3?'HD':'VIP',year:2026,type:t,cat:t}));
+const pg=(a,p)=>a.slice((p-1)*24,p*24);
+API.demo={n:'Demo',
+ latest:async p=>pg(DM,p),
+ list:async(t,p,o={})=>pg(DM.filter(x=>o.cat?x.cat==o.cat:t=='anime'?x.type=='anime':x.type==t),p),
+ search:async k=>DM.filter(x=>x.name.toLowerCase().includes(k.toLowerCase())),
+ detail:async s=>{const m=DM.find(x=>x.slug==s);if(!m)throw 0;return{name:m.name,orig:m.origin_name,content:'Đây là phim mẫu để chạy thử giao diện AnimeTV. Video là clip thử nghiệm công khai, dùng để kiểm tra player, danh sách tập, lịch sử xem và yêu thích.',thumb:m.thumb_url,poster:m.poster_url,year:m.year,cats:['Hoạt hình'],catSlug:'hoat-hinh',country:'Việt Nam',actors:'Diễn viên mẫu A, B, C',director:'Đạo diễn mẫu',ep:m.episode_current,time:'24 phút/tập',servers:[{name:'Server mẫu',eps:Array.from({length:m.episode_current=='Full'?1:8},(_,k)=>({name:m.episode_current=='Full'?'Full':'Tập '+(k+1),m3u8:DV[k%3],embed:''}))}]}},
+ cats:()=>Promise.reject()};
+const A=()=>API[S.src];
+const L=(t,p=1,o)=>A().list(t,p,o).then(a=>(a||[]).map(norm)).catch(()=>[]);
+const isLe=x=>/full/i.test(x.ep)||/^1\/1$/.test(x.ep)||x.total===1;
+const LH=async(k,p)=>{const a=(await Promise.all([0,1,2].map(i=>L('hoat-hinh',(p-1)*3+i+1)))).flat();return k=='all'?a:a.filter(x=>k=='le'?isLe(x):!isLe(x))};
+const LAT=(p=1)=>A().latest(p).then(a=>(a||[]).map(norm)).catch(()=>[]);
+/* ---------- Accounts (localStorage) ---------- */
+const users=()=>LS('atv_users')||{},cur=()=>LS('atv_cur')||'_guest';
+const U=()=>users()[cur()]||{name:'Khách',avatar:'🐱',hist:[],fav:[],later:[]};
+const saveU=u=>{const us=users();us[cur()]=u;LS('atv_users',us)};
+const sha=async s=>{try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return btoa(s)}};
+const AVS=['🐱','🐶','🦊','🐼','🐸','🦁','🐧','🐰','🌸','⚡'];
+
+/* ---------- TV UI ---------- */
+const ST=Object.assign({auto:true,seek:10,mode:'m3u8'},LS('atv_set')||{});
+const toast=t=>{const e=$('#ts');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',2200)};
+const card=x=>`<a class="f card" href="#watch/${x.src||S.src}/${x.slug}" data-n="${esc(x.name)}" data-p="${x.poster||x.thumb}" data-m="${esc([x.ep,'Hoạt hình'].filter(Boolean).join(' • '))}" data-o="${esc(x.orig||'')}" data-s="${x.src||S.src}" data-l="${x.slug}"><div class="im"><img loading="lazy" referrerpolicy="no-referrer" src="${x.thumb}" alt="">${x.t?`<div class="pt"><i style="width:${Math.min(100,x.t/x.d*100||0)}%"></i></div>`:''}</div><div class="cl"><p>${esc(x.name)}</p>${x.ep?`<span>${esc(x.ep)}</span>`:''}</div></a>`;
+const row=(t,a)=>a.length?`<div class="sec"><h3>${t}</h3><div class="row">${a.map(card).join('')}</div></div>`:'';
+const load=()=>$('#app').innerHTML='<div class="ld">Đang tải…</div>';
+const focus1=sel=>setTimeout(()=>{const e=$('#app').querySelector(sel||'.f')||document.querySelector('#sd .f');e&&e.focus({preventScroll:true})},60);
+const setSrc=()=>$('#sn').textContent='Nguồn: '+A().n;
+const dc={};let ht;
+document.addEventListener('focusin',e=>{const t=e.target,D=t.dataset;
+ if(D&&D.n&&$('#hero')){$('#hero').style.backgroundImage=`url('${D.p}')`;$('#hn').textContent=D.n;$('#hm').textContent=D.m;$('#hm2').textContent=D.o;$('#hd').textContent='';clearTimeout(ht);
+  ht=setTimeout(async()=>{const k=D.s+'/'+D.l;let d=dc[k];if(!d){try{d=dc[k]=await API[D.s].detail(D.l)}catch(x){return}}if(document.activeElement!==t||!$('#hero'))return;$('#hm2').textContent=[D.o,d.year,d.time,d.country].filter(Boolean).join(' • ');$('#hd').textContent=d.content},350)}
+ if(t.scrollIntoView&&!t.closest('#sd'))t.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'})});
+async function home(){
+ load();const [lat,bo,le]=await Promise.all([L('hoat-hinh',1),LH('bo',1),LH('le',1)]);const h=U().hist.slice(0,12),f=h[0]||lat[0];
+ if(!f){$('#app').innerHTML='<div class="ld">Không có dữ liệu. Nhấn nút ⚙ bên trái để đổi nguồn.</div>';focus1();return}
+ $('#app').innerHTML=`<div class="bgf" id="hero" style="background-image:url('${f.poster||f.thumb}')"></div><div class="hi"><h1 id="hn">${esc(f.name)}</h1><div class="m1" id="hm">${esc([f.ep,'Hoạt hình'].filter(Boolean).join(' • '))}</div><div class="m2" id="hm2">${esc(f.orig||'')}</div><div class="dd" id="hd"></div></div>
+ ${row('Tiếp tục xem',h)}${row('Hoạt hình mới cập nhật',lat)}${row('Phim bộ hoạt hình',bo)}${row('Phim lẻ hoạt hình',le)}`;focus1('.card');
+}
+async function list(k){
+ load();let p=1;const get=()=>LH(k,p),t=k=='le'?'Phim lẻ hoạt hình':k=='bo'?'Phim bộ hoạt hình':'Hoạt hình',a=await get();
+ $('#app').innerHTML=`<div class="pg"><div class="h1">${t}</div><div class="grid" id="g">${a.map(card).join('')}</div>${a.length?'<a class="f b" id="mb" style="margin-left:3rem" href="javascript:void 0">Xem thêm</a>':'<div class="ld">Không có dữ liệu</div>'}</div>`;
+ const m=$('#mb');if(m)m.onclick=async()=>{p++;const n=await get();$('#g').insertAdjacentHTML('beforeend',n.map(card).join(''));if(!n.length)m.remove()};focus1('.card');
+}
+function search(q){
+ const keys='abcdefghijklmnopqrstuvwxyz0123456789'.split('');
+ $('#app').innerHTML=`<div class="pg"><div class="h1">Tìm kiếm</div><input class="f" id="qi" placeholder="Nhập tên phim…" value="${esc(q||'')}"><div class="kb">${keys.map(k=>`<button class="f" data-k="${k}">${k}</button>`).join('')}<button class="f wd" data-k=" ">Cách</button><button class="f wd" data-k="⌫">⌫ Xóa</button><button class="f wd" style="background:var(--r)" data-k="OK">Tìm</button></div><div id="rs"></div></div>`;
+ const qi=$('#qi'),run=async()=>{const k=qi.value.trim();if(!k)return;$('#rs').innerHTML='<div class="ld">Đang tìm…</div>';const r=await A().search(k).then(a=>(a||[]).map(norm)).catch(()=>[]);$('#rs').innerHTML=r.length?`<div class="grid">${r.map(card).join('')}</div>`:'<div class="ld">Không tìm thấy</div>'};
+ document.querySelectorAll('.kb .f').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k=='OK')run();else if(k=='⌫')qi.value=qi.value.slice(0,-1);else qi.value+=k});
+ qi.onkeydown=e=>{if(e.key=='Enter')run()};if(q)run();focus1('.kb .f');
+}
+function me(sub){
+ const u=U(),lg=cur()!='_guest',names=['_guest',...Object.keys(users()).filter(x=>x!='_guest')];
+ if(['h','f','l'].includes(sub)){const k={h:'hist',f:'fav',l:'later'}[sub],t={h:'Lịch sử xem',f:'Yêu thích',l:'Xem sau'}[sub];
+  $('#app').innerHTML=`<div class="pg"><div class="h1">${t}</div>${u[k].length?`<div class="grid">${u[k].map(card).join('')}</div>`:'<div class="ld">Trống</div>'}</div>`;focus1('.card');return}
+ $('#app').innerHTML=`<div class="pg"><div class="pr"><div class="big">${u.avatar}</div><div><div style="font-size:2rem;font-weight:800">${esc(u.name)}</div><div class="mt">Người lớn • ID: ${u.id||'—'} • AccountID: ${lg?'atv'+esc(cur()):'khách'}</div></div></div>
+ <div style="padding:0 3rem"><button class="f b r" id="av">Đổi avatar</button><button class="f b" id="sw">Đăng nhập nhanh: đổi tài khoản</button></div>
+ <div class="mt" style="padding:0 3rem">Tài khoản tạo ở bản web (đăng ký/đăng nhập) sẽ hiện ở đây nếu dùng cùng trình duyệt.</div></div>`;
+ $('#av').onclick=()=>{const x=U();x.avatar=AVS[(AVS.indexOf(x.avatar)+1)%AVS.length];saveU(x);me()};
+ $('#sw').onclick=()=>{LS('atv_cur',names[(names.indexOf(cur())+1)%names.length]);toast('Tài khoản: '+U().name);me()};focus1('.b');
+}
+function library(){
+ const u=U();$('#app').innerHTML=`<div class="pg"><div class="h1">Thư viện</div><div style="padding:0 3rem"><a class="f b r" href="#list/bo">Phim bộ hoạt hình</a><a class="f b" href="#list/le">Phim lẻ hoạt hình</a><br><a class="f b" href="#me/h">Lịch sử xem (${u.hist.length})</a><a class="f b" href="#me/f">Yêu thích (${u.fav.length})</a><a class="f b" href="#me/l">Xem sau (${u.later.length})</a></div></div>`;focus1('.b');
+}
+async function watch(src,slug){
+ S.src=src;setSrc();load();let d;try{d=await API[src].detail(slug)}catch(e){$('#app').innerHTML='<div class="ld">Không tải được phim này.</div>';return}
+ let si=0,ei=0,mode=ST.mode,hls,last=0;const h0=U().hist.find(h=>h.slug==slug&&h.src==src);if(h0){si=h0.si||0;ei=h0.ei||0}
+ const brief={src,slug,name:d.name,thumb:d.thumb,poster:d.poster||d.thumb},has=k=>U()[k].some(f=>f.slug==slug&&f.src==src),pl=$('#pl');
+ $('#app').innerHTML=`<div class="dt" style="background-image:url('${d.poster||d.thumb}')"><div class="in"><h1>${esc(d.name)}</h1><div class="mt">${esc([d.orig,d.year,d.ep,d.time,d.country].filter(Boolean).join(' • '))}</div><div class="ds">${esc(d.content)}</div><div class="mt">${esc(d.actors?'Diễn viên: '+d.actors:'')}</div>
+ <a class="f b r" id="bp" href="javascript:void 0">▶ ${h0?'Xem tiếp':'Xem ngay'}</a><button class="f b" id="bf"></button><button class="f b" id="bl"></button><button class="f b" id="bm">⇄ Đổi player</button></div><div id="sv" class="eps" style="padding-bottom:.5rem"></div><div id="ep" class="eps"></div></div>`;
+ const tg=(k,b,t)=>{const u=U(),i=u[k].findIndex(f=>f.slug==slug&&f.src==src);i>=0?u[k].splice(i,1):u[k].unshift(brief);saveU(u);ui2()},ui2=()=>{$('#bf').textContent=(has('fav')?'♥ Đã thích':'♡ Yêu thích');$('#bl').textContent=(has('later')?'✓ Đã lưu xem sau':'＋ Xem sau')};ui2();
+ $('#bf').onclick=()=>tg('fav');$('#bl').onclick=()=>tg('later');$('#bm').onclick=()=>{mode=mode=='m3u8'?'embed':'m3u8';toast('Player: '+(mode=='m3u8'?'HLS':'Nhúng'))};
+ const eps=()=>{$('#sv').innerHTML=d.servers.length>1?d.servers.map((s,k)=>`<button class="f b ${k==si?'on':''}" data-k="${k}">${esc(s.name)}</button>`).join(''):'';$('#ep').innerHTML=(d.servers[si]?.eps||[]).map((e,k)=>`<button class="f b ${k==ei?'on':''}" data-k="${k}">${esc(e.name)}</button>`).join('');
+  $('#sv').querySelectorAll('.f').forEach(b=>b.onclick=()=>{si=+b.dataset.k;ei=0;eps();$('#sv .on').focus()});$('#ep').querySelectorAll('.f').forEach(b=>b.onclick=()=>{ei=+b.dataset.k;play()})};eps();
+ let prev=null,ovt;const flash=()=>{const o=$('#ov');if(!o)return;o.classList.add('on');clearTimeout(ovt);ovt=setTimeout(()=>o.classList.remove('on'),4000)};
+ function close(){if(hls){hls.destroy();hls=null}pl.hidden=true;pl.innerHTML='';window.PL=null;eps();(prev||$('#bp')).focus({preventScroll:true})}
+ function play(){
+  const e=d.servers[si]?.eps[ei];if(!e)return toast('Chưa có tập phim');prev=document.activeElement;if(hls){hls.destroy();hls=null}pl.hidden=false;
+  if(mode=='embed'||!e.m3u8){pl.innerHTML=`<iframe src="${esc(e.embed||e.m3u8)}" allowfullscreen allow="autoplay;fullscreen"></iframe>`;window.PL={embed:1,close};return}
+  pl.innerHTML=`<video autoplay playsinline></video><div id="ov"><div>${esc(d.name)} — ${esc(e.name)}</div><div class="pb"><i id="pi"></i></div><div id="tm"></div></div>`;const v=pl.firstChild;
+  if(!/\.m3u8/.test(e.m3u8))v.src=e.m3u8;else if(window.Hls&&Hls.isSupported()){hls=new Hls();hls.loadSource(e.m3u8);hls.attachMedia(v)}else v.src=e.m3u8;
+  if(h0&&h0.si==si&&h0.ei==ei&&h0.t>5)v.addEventListener('loadedmetadata',()=>v.currentTime=h0.t,{once:true});
+  const f=n=>{n=Math.floor(n||0);return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')};
+  v.ontimeupdate=()=>{$('#pi').style.width=(v.currentTime/(v.duration||1)*100)+'%';$('#tm').textContent=f(v.currentTime)+' / '+f(v.duration);if(Date.now()-last<5000)return;last=Date.now();const u=U();u.hist=u.hist.filter(h=>!(h.slug==slug&&h.src==src));u.hist.unshift({...brief,si,ei,ep:e.name,t:v.currentTime,d:v.duration||1,at:Date.now()});u.hist=u.hist.slice(0,60);saveU(u)};
+  v.onended=()=>{if(ST.auto&&d.servers[si].eps[ei+1]){ei++;play()}else close()};
+  window.PL={v,close,flash};flash();
+ }
+ $('#bp').onclick=play;focus1('#bp');
+}
+let cd=false;
+function settings(idx){
+ const it=[['Nguồn phim',A().n,()=>{S.src={demo:'kk',kk:'ng',ng:'demo'}[S.src];LS('atv_src',S.src);setSrc()}],
+ ['Giao diện','TV (bấm để sang Điện thoại)',()=>{try{localStorage.atv_mode='phone'}catch(e){}location.href='AnimeTV.html'}],
+ ['Tự phát tập tiếp theo',ST.auto?'Bật':'Tắt',()=>ST.auto=!ST.auto],
+ ['Bước tua (←/→)',ST.seek+' giây',()=>ST.seek={10:15,15:30,30:10}[ST.seek]],
+ ['Player mặc định',ST.mode=='m3u8'?'HLS (khuyên dùng)':'Nhúng (dự phòng)',()=>ST.mode=ST.mode=='m3u8'?'embed':'m3u8'],
+ ['Xóa lịch sử xem',cd?'Nhấn OK lần nữa để xóa':U().hist.length+' mục',()=>{if(cd){const u=U();u.hist=[];saveU(u);cd=false;toast('Đã xóa lịch sử')}else cd=true}]];
+ $('#app').innerHTML=`<div class="pg"><div class="h1">Cài đặt</div>${it.map((x,i)=>`<button class="f st" data-i="${i}">${x[0]}<span>${x[1]}</span></button>`).join('')}<div class="mt" style="padding:0 3rem">AnimeTV • Nguồn: Demo / KKPhim / NguonC</div></div>`;
+ $('#app').querySelectorAll('.st').forEach(b=>b.onclick=()=>{it[+b.dataset.i][2]();LS('atv_set',ST);settings(+b.dataset.i)});
+ $('#app').querySelector(`.st[data-i="${idx||0}"]`).focus({preventScroll:true});
+}
+/* ---------- Điều khiển bằng remote ---------- */
+const BACK=e=>['Escape','BrowserBack','GoBack'].includes(e.key)||(e.key=='Backspace'&&!/INPUT/.test(e.target.tagName))||[10009,461,4,8].includes(e.keyCode)&&e.target.tagName!='INPUT';
+document.addEventListener('keydown',e=>{
+ const P=window.PL,k=e.key;
+ if(P){if(BACK(e)){e.preventDefault();P.close();return}if(P.embed)return;const v=P.v;e.preventDefault();
+  if(k=='ArrowLeft'){v.currentTime=Math.max(0,v.currentTime-ST.seek);P.flash()}else if(k=='ArrowRight'){v.currentTime+=ST.seek;P.flash()}
+  else if(k=='Enter'||k==' '||k=='MediaPlayPause'){v.paused?v.play():v.pause();P.flash()}else if(k=='ArrowUp'||k=='ArrowDown')P.flash();return}
+ if(BACK(e)){if(location.hash&&location.hash!='#home'){e.preventDefault();history.back()}return}
+ const D={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[k];if(!D)return;
+ if(e.target.tagName=='INPUT'&&D[0])return;e.preventDefault();
+ const c=document.activeElement,all=[...document.querySelectorAll('.f')].filter(x=>x.offsetParent);
+ if(!c||!c.classList.contains('f')){(all.find(x=>x.closest('main'))||all[0])?.focus();return}
+ const r=c.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let best=null,bs=1e9;
+ for(const x of all){if(x===c)continue;const q=x.getBoundingClientRect(),dx=q.left+q.width/2-cx,dy=q.top+q.height/2-cy,p=D[0]?dx*D[0]:dy*D[1],o=D[0]?Math.abs(dy):Math.abs(dx);if(p<=2)continue;const sc=p+o*3;if(sc<bs){bs=sc;best=x}}
+ if(best)best.focus({preventScroll:true});
+});
+/* ---------- Router ---------- */
+function route(){
+ document.querySelectorAll('#sd a').forEach(x=>x.classList.toggle('on',x.getAttribute('href')==(location.hash||'#home')||(x.getAttribute('href')=='#library'&&/^#(list|me\/)/.test(location.hash))));
+ $('#src').classList.toggle('on',location.hash=='#settings');
+ const [a,b,c]=(location.hash.slice(1)||'home').split('/').map(decodeURIComponent);
+ if(window.PL)window.PL.close();
+ if(a=='watch')watch(b,c);else if(a=='list')list(b);else if(a=='search')search(b);else if(a=='me')me(b);else if(a=='library')library();else if(a=='settings')settings();else home();
+}
+addEventListener('hashchange',route);setSrc();route();
+</script></body></html>
