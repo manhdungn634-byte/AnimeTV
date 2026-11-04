@@ -1,0 +1,162 @@
+name: Build APK
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
+      - name: Tao project Android tu AnimeTV-TV.html
+        run: |
+          set -e
+          cat > settings.gradle <<'EOF'
+          pluginManagement{repositories{google();mavenCentral();gradlePluginPortal()}}
+          dependencyResolutionManagement{repositories{google();mavenCentral()}}
+          rootProject.name='AnimeTV-TV'
+          include ':app'
+          EOF
+          cat > build.gradle <<'EOF'
+          plugins{id 'com.android.application' version '8.2.2' apply false}
+          EOF
+          cat > gradle.properties <<'EOF'
+          android.useAndroidX=true
+          org.gradle.jvmargs=-Xmx2g
+          EOF
+          mkdir -p app
+          cat > app/build.gradle <<'EOF'
+          plugins{id 'com.android.application'}
+          android{
+           namespace 'com.animetv.tv'
+           compileSdk 34
+           defaultConfig{applicationId 'com.animetv.tv';minSdk 21;targetSdk 34;versionCode 1;versionName '1.0'}
+           buildTypes{release{minifyEnabled false}}
+          }
+          dependencies{implementation 'androidx.webkit:webkit:1.9.0'}
+          EOF
+          mkdir -p app/src/main
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+           <uses-permission android:name="android.permission.INTERNET"/>
+           <uses-feature android:name="android.software.leanback" android:required="false"/>
+           <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
+           <application android:label="AnimeTV" android:icon="@drawable/ic_launcher" android:banner="@drawable/banner" android:usesCleartextTraffic="true" android:hardwareAccelerated="true">
+            <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="landscape" android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:configChanges="orientation|screenSize|keyboardHidden|keyboard|uiMode|smallestScreenSize|screenLayout">
+             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/><category android:name="android.intent.category.LEANBACK_LAUNCHER"/></intent-filter>
+            </activity>
+           </application>
+          </manifest>
+          EOF
+          mkdir -p app/src/main/java/com/animetv/tv
+          cat > app/src/main/java/com/animetv/tv/MainActivity.java <<'EOF'
+          package com.animetv.tv;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.view.View;
+          import android.view.WindowManager;
+          import android.webkit.*;
+          import android.widget.FrameLayout;
+          import androidx.webkit.WebViewAssetLoader;
+
+          public class MainActivity extends Activity {
+            WebView web; FrameLayout root; View custom; WebChromeClient.CustomViewCallback cb;
+
+            @Override protected void onCreate(Bundle b) {
+              super.onCreate(b);
+              getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+              root = new FrameLayout(this); setContentView(root);
+              web = new WebView(this); root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+              WebSettings s = web.getSettings();
+              s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true);
+              s.setMediaPlaybackRequiresUserGesture(false);
+              s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+              final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
+                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this)).build();
+              web.setWebViewClient(new WebViewClient() {
+                @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
+                  return loader.shouldInterceptRequest(r.getUrl());
+                }
+              });
+              web.setWebChromeClient(new WebChromeClient() {
+                @Override public void onShowCustomView(View v, CustomViewCallback c) {
+                  custom = v; cb = c; root.addView(v, new FrameLayout.LayoutParams(-1, -1)); web.setVisibility(View.GONE);
+                }
+                @Override public void onHideCustomView() { hideCustom(); }
+              });
+              web.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+              web.requestFocus();
+            }
+
+            void hideCustom() {
+              if (custom == null) return;
+              root.removeView(custom); custom = null; web.setVisibility(View.VISIBLE);
+              if (cb != null) cb.onCustomViewHidden();
+            }
+
+            @Override public void onWindowFocusChanged(boolean f) {
+              super.onWindowFocusChanged(f);
+              if (f) getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            }
+
+            @Override public void onBackPressed() {
+              if (custom != null) { hideCustom(); return; }
+              String js = "(function(){if(window.PL){document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',keyCode:27,bubbles:true}));return 1}"
+                + "if(location.hash&&location.hash!=='#home'){history.back();return 1}return 0})()";
+              web.evaluateJavascript(js, new ValueCallback<String>() {
+                @Override public void onReceiveValue(String v) { if (!"1".equals(v)) finish(); }
+              });
+            }
+
+            @Override protected void onPause() { super.onPause(); web.onPause(); }
+            @Override protected void onResume() { super.onResume(); web.onResume(); }
+            @Override protected void onDestroy() { root.removeAllViews(); web.destroy(); super.onDestroy(); }
+          }
+          EOF
+          mkdir -p app/src/main/res/drawable
+          cat > app/src/main/res/drawable/ic_launcher.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+           <path android:fillColor="#0B0B0F" android:pathData="M0,0h108v108h-108z"/>
+           <path android:fillColor="#EE2B2B" android:pathData="M54,54m-34,0a34,34 0,1 1,68 0a34,34 0,1 1,-68 0"/>
+           <path android:fillColor="#FFFFFF" android:pathData="M46,38L72,54L46,70z"/>
+          </vector>
+          EOF
+          mkdir -p app/src/main/res/drawable
+          cat > app/src/main/res/drawable/banner.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="320dp" android:height="180dp" android:viewportWidth="320" android:viewportHeight="180">
+           <path android:fillColor="#0B0B0F" android:pathData="M0,0h320v180h-320z"/>
+           <path android:fillColor="#EE2B2B" android:pathData="M160,90m-44,0a44,44 0,1 1,88 0a44,44 0,1 1,-88 0"/>
+           <path android:fillColor="#FFFFFF" android:pathData="M148,68L180,90L148,112z"/>
+          </vector>
+          EOF
+          mkdir -p app/src/main/assets
+          python3 - <<'EOF'
+          h=open('AnimeTV-TV.html',encoding='utf-8').read()
+          a="['Giao diện','TV (bấm để sang Điện thoại)',()=>{try{localStorage.atv_mode='phone'}catch(e){}location.href='AnimeTV.html'}],\n "
+          open('app/src/main/assets/index.html','w',encoding='utf-8').write(h.replace(a,''))
+          EOF
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
+      - name: Doi ten APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk AnimeTV-TV.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AnimeTV-TV-apk
+          path: AnimeTV-TV.apk
+      - name: Release (khi push tag v*)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AnimeTV-TV.apk
